@@ -13,30 +13,55 @@ public class DrawingBoard : MonoBehaviour
     private void Start()
     {
         _spriteRenderer = GetComponent<SpriteRenderer>();
+
         _size = new Vector2Int(_spriteRenderer.sprite.texture.width, _spriteRenderer.sprite.texture.height);
         _boardTexture = new Texture2D(_size.x, _size.y, TextureFormat.ARGB32, false);  
 
         Rect spriteRect = new Rect(_spriteRenderer.sprite.rect);
-        //Vector2 pivot = _spriteRenderer.sprite.pivot;
-        Vector2 pivot = Vector2.zero;
-        _sprite = Sprite.Create(_boardTexture, spriteRect, pivot);
+        Vector2 pivot = new Vector2(0.5f, 0.5f);
+
+        _sprite = Sprite.Create(_boardTexture, spriteRect, pivot,_spriteRenderer.sprite.pixelsPerUnit);
         _spriteRenderer.sprite = _sprite;
 
         GenerateTexture();
-        //OnUpdate();
     }
 
-    public void AddPixel(int x, int y)
+    public void SetPixel(int x, int y)
     {
-
+        _boardTexture.SetPixel(x, y, Color.white);
+        _boardTexture.Apply();
     }
 
-    private void OnUpdate()
+    public void SetPixel(Vector3 localCoordinates)
     {
-
+        int PixelX = (int)((localCoordinates.x + 0.5f) * _size.x);
+        int PixelY = (int)((localCoordinates.y + 0.5f) * _size.y);
+        _boardTexture.SetPixel(PixelX, PixelY, Color.white);
+        _boardTexture.Apply();
     }
 
-    private void GenerateTexture()
+    //For some reason if you draw in the edge of image, some pixels on the other side get's painted too
+    //I probably need to fix that
+    //And add some decreasing brush strength in the future
+
+    public void SetPixel(Vector3 localCoordinates, int brushSize)
+    {
+        int OriginX = (int)((localCoordinates.x + 0.5f) * _size.x);
+        int OriginY = (int)((localCoordinates.y + 0.5f) * _size.y);
+
+        int halfBrushSize = (int)(brushSize / 2);
+
+        for (int y = OriginY - halfBrushSize; y <= OriginY + halfBrushSize; y++)
+        {
+            for (int x = OriginX - halfBrushSize; x <= OriginX + halfBrushSize; x++)
+            {
+                _boardTexture.SetPixel(x, y, Color.white);
+            }
+        }
+        _boardTexture.Apply();
+    }
+
+    public void GenerateTexture()
     {
         for (int y = 0; y < _size.y; y++)
         {
